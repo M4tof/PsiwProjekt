@@ -7,15 +7,25 @@
 #include <fcntl.h>
 #include <time.h>
 #include <string.h>
+#include <ctype.h>
+#include <stdbool.h>
 
-#define sleep_time 2
+#define sleep_time 0.5
+
+bool isnum(char fullnumber[]){
+    for(int i=0; i<strlen(fullnumber);i++){
+        if(!isdigit(fullnumber[i])){
+            return false;
+        }
+    }
+    return true;
+}
 
 int main(int argc, char* argv[]){
-    //setup pt 1
+    //setup
     srand(time(NULL));
     int gold = 0;
 
-    //Error check and setup pt2 
     if (argc < 6) {
         printf("Incorect number of arguments\n");
         return 1;
@@ -29,7 +39,11 @@ int main(int argc, char* argv[]){
     strcpy(klucz,argv[1]);
     //if failed to open klucz
 
-    // if numbers not numbers
+    if ((!isnum(argv[2]))||(!isnum(argv[3]))||(!isnum(argv[4]))||(!isnum(argv[5]))){
+        printf("One or more of the arguments that should be an number, isn't\n");
+        return 1;
+    }
+
     int liczba_zamównień = atoi(argv[2]);
     int max_A_per_zam = atoi(argv[3]);
     int max_B_per_zam = atoi(argv[4]);
@@ -40,12 +54,12 @@ int main(int argc, char* argv[]){
     int A, B, C;
     
     //main loop
-    for (int i = 0; i<liczba_zamównień; i++){
+    for (int i = 1; i<=liczba_zamównień; i++){
         sleep(sleep_time);
         A = rand() % max_A_per_zam;
         B = rand() % max_B_per_zam;
         C = rand() % max_C_per_zam;
-        printf("Chce A:%d , B:%d , C:%d \n",A,B,C);
+        printf("Zamowienie %d -> A:%d , B:%d , C:%d \n",i,A,B,C);
     }
 
     //Closing statement
