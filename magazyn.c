@@ -91,8 +91,18 @@ int main(int argc, char* argv[]) {
     printf("nrOfC: %d, costOfC: %d\n", nrOfC, costOfC);
 
     //make 3 curiers
-    //open klucz
+    
+    int pdesk = open(klucz,O_WRONLY);
+    if (pdesk == -1){
+        perror("Opening FIFO\n");
+        return 1;
+    }
     //main loop
+    while(1){
+        int data[3];
+        read(pdesk,data,3);
+        printf("Zamówienie z %d A, %d B, %d C\n",data[0],data[1],data[2]);
+    }
 
     // KYS
     return 0;

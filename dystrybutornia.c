@@ -35,9 +35,13 @@ int main(int argc, char* argv[]){
         printf("Key name to big\n");
         return 1;
     }
+    
     char klucz[strlen(argv[1])];
     strcpy(klucz,argv[1]);
-    //if failed to open klucz
+    if (mkfifo(klucz,0600) == -1){
+        perror("Making FIFO\n");
+        return 1;
+    }
 
     if ((!isnum(argv[2]))||(!isnum(argv[3]))||(!isnum(argv[4]))||(!isnum(argv[5]))){
         printf("One or more of the arguments that should be an number, isn't\n");
@@ -54,12 +58,24 @@ int main(int argc, char* argv[]){
     int A, B, C;
     
     //main loop
+    int pdesk = open(klucz,O_WRONLY);
+    if (pdesk == -1){
+        perror("Opening FIFO\n");
+        return 1;
+    }
+
     for (int i = 1; i<=liczba_zamównień; i++){
         sleep(sleep_time);
         A = rand() % max_A_per_zam;
         B = rand() % max_B_per_zam;
         C = rand() % max_C_per_zam;
         printf("Zamowienie %d -> A:%d , B:%d , C:%d \n",i,A,B,C);
+        int message[3];
+        message[0] = A;
+        message[1] = B;
+        message[2] = C;
+        write(pdesk,message,3); 
+        //If failed to
     }
 
     //Closing statement
@@ -67,5 +83,6 @@ int main(int argc, char* argv[]){
 
     //wait for all mag to close
     // print out payed out money
+    unlink(klucz);
     return 0;
 }
