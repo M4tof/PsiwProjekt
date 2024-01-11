@@ -117,13 +117,8 @@ int main(int argc, char* argv[]) {
             nrOfB -= recived[2];
             nrOfC -= recived[3];
 
-            int goldCost = 0;
-            goldCost += (recived[1]*costOfA);
-            goldCost += (recived[2]*costOfB);
-            goldCost += (recived[3]*costOfC);
-            Earnings += goldCost;
+            Earnings = Earnings + (recived[1]*costOfA) + (recived[2]*costOfB) + (recived[3]*costOfC);
 
-            write(goldDesk,&goldCost,sizeof(goldCost));
             printf("Zamowienie %d wykonane\n",recived[0]);
         }
         else{
@@ -132,7 +127,8 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    printf("\n Ten magazyn zarobił %d Gold'a\n",Earnings);
+    printf("\nTen magazyn zarobił %d Gold'a\n",Earnings);
+    write(goldDesk,&Earnings,sizeof(Earnings));
     close(pdesk);
     close(goldDesk);
     return 0;
