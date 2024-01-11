@@ -31,16 +31,13 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    if ( strlen(argv[2]) > 2048){
+    if ( strlen(argv[2]) > 2008){
         printf("Key name to big\n");
         return 1;
     }
-    char klucz[strlen(argv[1])];
-    strcpy(klucz,argv[1]);
-
-    printf("Beginning configuration \n");
+    char klucz[strlen(argv[2])];
+    strcpy(klucz,argv[2]);
     
-    // Configuration 
     int nrOfA = 0, nrOfB = 0, nrOfC = 0;
     int costOfA = 0, costOfB = 0, costOfC = 0;
 
@@ -92,16 +89,43 @@ int main(int argc, char* argv[]) {
 
     //make 3 curiers
     
-    int pdesk = open(klucz,O_WRONLY);
+    int pdesk = open(klucz,O_RDONLY);
     if (pdesk == -1){
         perror("Opening FIFO\n");
         return 1;
     }
-    //main loop
+
+    char goldFIFO[40] = "GOLD_";
+    strcat(goldFIFO,klucz);
+
+    int goldDesk = open(goldFIFO,O_WRONLY);
+    if (goldDesk == -1){
+        perror("Opening second FIFO\n");
+        return 1;       
+    }
+
     while(1){
-        int data[3];
-        read(pdesk,data,3);
-        printf("Zamówienie z %d A, %d B, %d C\n",data[0],data[1],data[2]);
+        int recived[4];
+        if(read(pdesk,recived,sizeof(recived))<=0){
+            break;
+        }
+        printf("Zamówienie nr:%d z %d A, %d B, %d C\n",recived[0],recived[1],recived[2],recived[3]);
+        if(nrOfA >= recived[1] && nrOfB >= recived[2] && nrOfC >= recived[3]){
+            nrOfA -= recived[1];
+            nrOfB -= recived[2];
+            nrOfC -= recived[3];
+
+            int goldCost = 0;
+            goldCost += (recived[1]*costOfA);
+            goldCost += (recived[2]*costOfB);
+            goldCost += (recived[3]*costOfC);
+            write(goldDesk,&goldCost,sizeof(goldCost));
+            printf("Zamowienie %d wykonane\n",recived[0]);
+        }
+        else{
+            printf("Nie mozna wykonac zamowienia %d \n",recived[0]);
+            break;
+        }
     }
 
     // KYS
