@@ -92,12 +92,14 @@ int main(int argc, char* argv[]){
     }
 
     printf("Wszystkie zamowienia wyslane\n");
+    close(pdesk);
+    
     sleep(sleep_time);
     
     int goldTotal = 0;
     while(1){
         int gold;
-        if( read(goldDesk,&gold,sizeof(gold))<=0 ){
+        if(read(goldDesk,&gold,sizeof(gold)) <= 0 ){
             break;
         }
         else{
@@ -106,7 +108,7 @@ int main(int argc, char* argv[]){
         
     }
     
-    printf("\n Ostatecznie wszystkie zamowienia kostowaly => %d Gold'a\n",goldTotal);
+    printf("\nOstatecznie wszystkie zamowienia kostowaly => %d Gold'a\n",goldTotal);
 
 
     unlink(klucz);

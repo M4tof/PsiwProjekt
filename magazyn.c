@@ -41,6 +41,8 @@ int main(int argc, char* argv[]) {
     int nrOfA = 0, nrOfB = 0, nrOfC = 0;
     int costOfA = 0, costOfB = 0, costOfC = 0;
 
+    int Earnings;
+
     char buf;
     char data[64];
     int readData = 0;
@@ -85,7 +87,7 @@ int main(int argc, char* argv[]) {
 
     printf("nrOfA: %d, costOfA: %d\n", nrOfA, costOfA);
     printf("nrOfB: %d, costOfB: %d\n", nrOfB, costOfB);
-    printf("nrOfC: %d, costOfC: %d\n", nrOfC, costOfC);
+    printf("nrOfC: %d, costOfC: %d\n\n", nrOfC, costOfC);
 
     //make 3 curiers
     
@@ -119,6 +121,8 @@ int main(int argc, char* argv[]) {
             goldCost += (recived[1]*costOfA);
             goldCost += (recived[2]*costOfB);
             goldCost += (recived[3]*costOfC);
+            Earnings += goldCost;
+
             write(goldDesk,&goldCost,sizeof(goldCost));
             printf("Zamowienie %d wykonane\n",recived[0]);
         }
@@ -128,6 +132,8 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // KYS
+    printf("\n Ten magazyn zarobił %d Gold'a\n",Earnings);
+    close(pdesk);
+    close(goldDesk);
     return 0;
 }
