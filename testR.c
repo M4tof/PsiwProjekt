@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     char klucz[strlen(argv[1])];
     strcpy(klucz,argv[1]);
 
-    int pdesk = open(klucz,O_WRONLY);
+    int pdesk = open(klucz,O_RDONLY);
     if (pdesk == -1){
         perror("Opening FIFO\n");
         return 1;
@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
     //main loop
     while(1){
         int data[3];
-        read(pdesk,data,3);
+        read(pdesk,data,sizeof(data));
         printf("Zamówienie z %d A, %d B, %d C\n",data[0],data[1],data[2]);
     }
 

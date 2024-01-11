@@ -10,7 +10,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-#define sleep_time 0.5
+#define sleep_time 2.5
 
 int main(int argc, char* argv[]){
     srand(time(NULL));
@@ -42,7 +42,7 @@ int main(int argc, char* argv[]){
         message[0] = A;
         message[1] = B;
         message[2] = C;
-        write(pdesk,message,3); 
+        write(pdesk,message,sizeof(message)); 
     }
 
     unlink(klucz);
