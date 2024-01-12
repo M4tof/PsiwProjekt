@@ -9,6 +9,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <sys/wait.h>
 
 #define sleep_time 1.5
 
