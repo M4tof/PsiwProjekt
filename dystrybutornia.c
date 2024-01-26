@@ -11,7 +11,7 @@
 #include <stdbool.h>
 #include <sys/wait.h>
 
-#define sleep_time 1.5
+#define sleep_time 2.5
 
 bool isnum(char fullnumber[]){
     for(int i=0; i<strlen(fullnumber);i++){
@@ -34,7 +34,12 @@ int main(int argc, char* argv[]){
         printf("Key name to big\n");
         return 1;
     }
-    
+
+    if ((!isnum(argv[2]))||(!isnum(argv[3]))||(!isnum(argv[4]))||(!isnum(argv[5]))){
+        printf("One or more of the arguments that should be an number, isn't\n");
+        return 1;
+    }
+
     char klucz[strlen(argv[1])];
     strcpy(klucz,argv[1]);
     if (mkfifo(klucz,0600) == -1){
@@ -49,10 +54,7 @@ int main(int argc, char* argv[]){
         return 1;
     }
 
-    if ((!isnum(argv[2]))||(!isnum(argv[3]))||(!isnum(argv[4]))||(!isnum(argv[5]))){
-        printf("One or more of the arguments that should be an number, isn't\n");
-        return 1;
-    }
+
 
     int liczba_zamównień = atoi(argv[2]);
     int max_A_per_zam = atoi(argv[3]);
@@ -92,7 +94,7 @@ int main(int argc, char* argv[]){
         write(pdesk,message,sizeof(message)); 
     }
 
-    printf("Wszystkie zamowienia wyslane\n");
+    printf("Wszystkie zamowienia wyslane\n\n");
     close(pdesk);
     
     sleep(sleep_time);
@@ -105,6 +107,7 @@ int main(int argc, char* argv[]){
         }
         else{
             goldTotal += gold;
+            printf("Zapłacono Gold'a: %d \n",gold);
         }
         
     }

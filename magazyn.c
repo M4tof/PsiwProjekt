@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
     int nrOfA = 0, nrOfB = 0, nrOfC = 0;
     int costOfA = 0, costOfB = 0, costOfC = 0;
 
-    int Earnings;
+    int Earnings = 0;
 
     char buf;
     char data[64];
@@ -105,104 +105,35 @@ int main(int argc, char* argv[]) {
         return 1;       
     }
 
-    char OrderFIFO[40];
-    strcpy(OrderFIFO,argv[1]);
-    OrderFIFO[strlen(OrderFIFO)-10] = '\0';
-    strcat(OrderFIFO,"ORDERS");
+     while(1){
+        int recived[4];
+        if(read(pdesk,recived,sizeof(recived))<=0){
+            break;
+        }
+        printf("Zamówienie nr:%d z %d A, %d B, %d C\n",recived[0],recived[1],recived[2],recived[3]);
+        if(nrOfA >= recived[1] && nrOfB >= recived[2] && nrOfC >= recived[3]){
+            nrOfA -= recived[1];
+            nrOfB -= recived[2];
+            nrOfC -= recived[3];
 
-    if(mkfifo(OrderFIFO,0600) == -1){
-        perror("Making order FIFO\n");
-        return 1;
+            int goldCost = 0;
+            goldCost += (recived[1]*costOfA);
+            goldCost += (recived[2]*costOfB);
+            goldCost += (recived[3]*costOfC);
+            Earnings += goldCost;
+
+            printf("Zarobiono: %d\n",goldCost);
+            write(goldDesk,&goldCost,sizeof(goldCost));
+            printf("Zamowienie %d wykonane\n\n",recived[0]);
+        }
+        else{
+            printf("Nie mozna wykonac zamowienia %d \n",recived[0]);
+            break;
+        }
     }
 
-    int pipe1[2];
-
-    if(pipe(pipe1) == -1){
-        perror("Making pipe kurier->magazyn\n");
-        return 1;
-    }
-
-    if(fork()==0){
-        close(pipe1[1]);
-
-        int OrderDesk = open(OrderFIFO,O_WRONLY);
-        if (OrderDesk == -1){
-            perror("Opening order fifo on 1 curier\n");
-            return 1;
-        }
-
-        while(1){
-            int recived[4];
-            if(read(pdesk,recived,sizeof(recived))<=0){
-                break;
-            }
-
-            printf("Kurier 1:Zamówienie nr:%d z %d A, %d B, %d C\n",recived[0],recived[1],recived[2],recived[3]);
-            
-            recived[0] = 1;
-
-            write(OrderDesk,recived,sizeof(recived));
-            
-            int cost;
-            read(pipe1[0],&cost,sizeof(cost));
-            
-            if(cost >=0){
-                write(goldDesk,&cost,sizeof(cost));
-            }
-            
-            else{
-                printf("Kurier 1:Nie mozna wykonac zamowienia\n");
-                break;
-            }
-
-        }
-
-        close(pipe1[0]);
-        printf("Kurier 1:konczy prace\n");
-        return 0;
-    }
-
-    else{
-        close(pipe1[0]);
-
-        int OrderDesk = open(OrderFIFO,O_RDONLY);
-        if (OrderDesk == -1){
-            perror("Opening order fifo on 1 curier\n");
-            return 1;
-        }
-
-        while(1){
-            int reciveddata[4];
-            if(read(OrderDesk,reciveddata,sizeof(reciveddata)) <=0 ){
-                break;
-            }
-
-            if(nrOfA >= reciveddata[2] && nrOfB >= reciveddata[3] && nrOfC >= reciveddata[4]){
-                nrOfA -= reciveddata[2];
-                nrOfB -= reciveddata[3];
-                nrOfC -= reciveddata[4];
-
-                int goldCost = 0;
-                goldCost += (reciveddata[2]*costOfA);
-                goldCost += (reciveddata[3]*costOfB);
-                goldCost += (reciveddata[4]*costOfC);
-
-                write(pipe1[1],&goldCost,sizeof(goldCost));
-                printf("Zamowienie kuriera %d mozna wykonac\n",reciveddata[0]);
-            }
-            else{
-                int cannot = -1;
-                write(pipe1[1],&cannot,sizeof(cannot));
-                printf("Zamowienie kuriera %d jest niewykonywalne\n",reciveddata[0]);
-            }
-
-        }
-
-    }
-
-    while(wait(NULL)>0);        
     printf("\nTen magazyn zarobił %d Gold'a\n",Earnings);
-    write(goldDesk,&Earnings,sizeof(Earnings));
+    printf("Na magazynie pozostało A:%d B:%d C:%d \n",nrOfA,nrOfB,nrOfC);
     
     close(pdesk);
     close(goldDesk);
