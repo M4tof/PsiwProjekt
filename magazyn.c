@@ -4,12 +4,28 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <sys/wait.h>
 #include <fcntl.h>
 #include <time.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
-#include <sys/wait.h>
+
+
+#define Kurier2Magazyn 4
+#define Kurier1 1
+#define Kurier2 2
+#define Kurier3 3
+struct msgb{
+    long t;
+    int from;
+    int A;
+    int B;
+    int C;
+    int gold;
+};
 
 bool isnum(char fullnumber[]){
     for(int i=0; i<strlen(fullnumber);i++){
@@ -105,35 +121,164 @@ int main(int argc, char* argv[]) {
         return 1;       
     }
 
-     while(1){
-        int recived[4];
-        if(read(pdesk,recived,sizeof(recived))<=0){
-            break;
-        }
-        printf("Zamówienie nr:%d z %d A, %d B, %d C\n",recived[0],recived[1],recived[2],recived[3]);
-        if(nrOfA >= recived[1] && nrOfB >= recived[2] && nrOfC >= recived[3]){
-            nrOfA -= recived[1];
-            nrOfB -= recived[2];
-            nrOfC -= recived[3];
+    key_t qid = msgget(IPC_PRIVATE,IPC_CREAT|0660);
 
-            int goldCost = 0;
-            goldCost += (recived[1]*costOfA);
-            goldCost += (recived[2]*costOfB);
-            goldCost += (recived[3]*costOfC);
-            Earnings += goldCost;
+    if(fork()==0){ //Kurier 1
+        struct msgb w;
 
-            printf("Zarobiono: %d\n",goldCost);
-            write(goldDesk,&goldCost,sizeof(goldCost));
-            printf("Zamowienie %d wykonane\n\n",recived[0]);
+        while(1){
+            int recived[4];
+            if(read(pdesk,recived,sizeof(recived))<=0){
+                break;
+            }
+
+            printf("Kurier 1: Zamówienie nr:%d z %d A, %d B, %d C\n",recived[0],recived[1],recived[2],recived[3]);
+            
+            w.t = Kurier2Magazyn;
+            w.from = Kurier1;
+            w.A = recived[1];
+            w.B = recived[2];
+            w.C = recived[3];
+            w.gold = 0;
+
+            msgsnd(qid,&w,sizeof(struct msgb),0);
+
+            msgrcv(qid,&w,sizeof(struct msgb),Kurier1,0);
+            if(w.gold == -1){
+                break;
+            }
+            else{
+                int goldCost2 = w.gold;
+                write(goldDesk,&goldCost2,sizeof(goldCost2));
+                printf("Kurier 1: Zamowienie %d wykonane\n\n",recived[0]);
+            }
         }
-        else{
-            printf("Nie mozna wykonac zamowienia %d \n",recived[0]);
-            break;
-        }
+        printf("Kurier 1: Konczy prace\n");
+        w.t = Kurier2Magazyn;
+        w.from = -1;
+        msgsnd(qid,&w,sizeof(struct msgb),0);
+        return 0;
     }
 
-    printf("\nTen magazyn zarobił %d Gold'a\n",Earnings);
-    printf("Na magazynie pozostało A:%d B:%d C:%d \n",nrOfA,nrOfB,nrOfC);
+    if(fork()==0){ //Kurier 2
+        struct msgb w;
+
+        while(1){
+            int recived[4];
+            if(read(pdesk,recived,sizeof(recived))<=0){
+                break;
+            }
+
+            printf("Kurier 2: Zamówienie nr:%d z %d A, %d B, %d C\n",recived[0],recived[1],recived[2],recived[3]);
+            
+            w.t = Kurier2Magazyn;
+            w.from = Kurier2;
+            w.A = recived[1];
+            w.B = recived[2];
+            w.C = recived[3];
+            w.gold = 0;
+
+            msgsnd(qid,&w,sizeof(struct msgb),0);
+
+            msgrcv(qid,&w,sizeof(struct msgb),Kurier2,0);
+            if(w.gold == -1){
+                break;
+            }
+            else{
+                int goldCost2 = w.gold;
+                write(goldDesk,&goldCost2,sizeof(goldCost2));
+                printf("Kurier 2: Zamowienie %d wykonane\n\n",recived[0]);
+            }
+        }
+        printf("Kurier 2: Konczy prace\n");
+        w.t = Kurier2Magazyn;
+        w.from = -1;
+        msgsnd(qid,&w,sizeof(struct msgb),0);
+        return 0;
+    }
+
+    if(fork()==0){ //Kurier 3
+        struct msgb w;
+
+        while(1){
+            int recived[4];
+            if(read(pdesk,recived,sizeof(recived))<=0){
+                break;
+            }
+
+            printf("Kurier 3: Zamówienie nr:%d z %d A, %d B, %d C\n",recived[0],recived[1],recived[2],recived[3]);
+            
+            w.t = Kurier2Magazyn;
+            w.from = Kurier3;
+            w.A = recived[1];
+            w.B = recived[2];
+            w.C = recived[3];
+            w.gold = 0;
+
+            msgsnd(qid,&w,sizeof(struct msgb),0);
+
+            msgrcv(qid,&w,sizeof(struct msgb),Kurier3,0);
+            if(w.gold == -1){
+                break;
+            }
+            else{
+                int goldCost2 = w.gold;
+                write(goldDesk,&goldCost2,sizeof(goldCost2));
+                printf("Kurier 3: Zamowienie %d wykonane\n\n",recived[0]);
+            }
+        }
+        printf("Kurier 3: Konczy prace\n");
+        w.t = Kurier2Magazyn;
+        w.from = -1;
+        msgsnd(qid,&w,sizeof(struct msgb),0);
+        return 0;
+    }
+
+    else{ //Magazyn
+        struct msgb w0;
+        int active = 3;
+        while(1){
+            msgrcv(qid,&w0,sizeof(struct msgb),Kurier2Magazyn,0);
+            if (w0.from == -1){
+                active--;
+                if(active == 0){
+                    printf("Magazyn: Brak kurierow\n");
+                    break;
+                }
+            }
+
+            else{
+                w0.t = w0.from;
+
+                if(nrOfA >= w0.A && nrOfB >= w0.B && nrOfC >= w0.C){
+                    nrOfA -= w0.A;
+                    nrOfB -= w0.B;
+                    nrOfC -= w0.C;
+
+                    int goldCost = 0;
+                    goldCost += (w0.A*costOfA);
+                    goldCost += (w0.B*costOfB);
+                    goldCost += (w0.C*costOfC);
+                    Earnings += goldCost;
+                    
+                    printf("Magazyn: Zarobiono: %d\n",goldCost);
+                    printf("Magazyn: uznaje za możliwe zadanie kuriera%d \n",w0.from);
+                    w0.gold = goldCost;
+                    
+                }
+                else{
+                    printf("Magazyn: nie moze wykonac zamowienia kuriera%d \n",w0.from); 
+                    w0.gold = -1;
+                }
+                msgsnd(qid,&w0,sizeof(struct msgb),0);
+            }    
+        }
+
+    }
+
+
+    printf("\nMagazyn: zarobił %d Gold'a\n",Earnings);
+    printf("Magazyn: pozostało A:%d B:%d C:%d \n",nrOfA,nrOfB,nrOfC);
     
     close(pdesk);
     close(goldDesk);
