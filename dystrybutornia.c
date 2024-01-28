@@ -11,7 +11,7 @@
 #include <stdbool.h>
 #include <sys/wait.h>
 
-#define sleep_time 2.5
+#define sleep_time 1.5
 
 bool isnum(char fullnumber[]){
     for(int i=0; i<strlen(fullnumber);i++){
