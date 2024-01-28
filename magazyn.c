@@ -36,6 +36,13 @@ bool isnum(char fullnumber[]){
     return true;
 }
 
+void timeout(){
+    sleep(150);
+    kill(getppid(),SIGKILL);
+    printf("JEDEN Z KURIEROW DOSZEDL DO LIMITU CZASU\n");
+    exit(0);
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 3) {
         printf("Incorrect number of arguments\n");
@@ -128,9 +135,18 @@ int main(int argc, char* argv[]) {
 
         while(1){
             int recived[4];
+
+            int cpid = fork();
+            if(cpid == 0){
+                timeout();
+            }
+            int child_pid = cpid;
+
             if(read(pdesk,recived,sizeof(recived))<=0){
                 break;
             }
+            
+            kill(child_pid, SIGKILL);
 
             printf("Kurier 1: Zamówienie nr:%d z %d A, %d B, %d C\n",recived[0],recived[1],recived[2],recived[3]);
             
@@ -165,9 +181,18 @@ int main(int argc, char* argv[]) {
 
         while(1){
             int recived[4];
+            
+            int cpid = fork();
+            if(cpid == 0){
+                timeout();
+            }
+            int child_pid = cpid;
+
             if(read(pdesk,recived,sizeof(recived))<=0){
                 break;
             }
+            
+            kill(child_pid, SIGKILL);
 
             printf("Kurier 2: Zamówienie nr:%d z %d A, %d B, %d C\n",recived[0],recived[1],recived[2],recived[3]);
             
@@ -202,9 +227,18 @@ int main(int argc, char* argv[]) {
 
         while(1){
             int recived[4];
+            
+            int cpid = fork();
+            if(cpid == 0){
+                timeout();
+            }
+            int child_pid = cpid;
+
             if(read(pdesk,recived,sizeof(recived))<=0){
                 break;
             }
+            
+            kill(child_pid, SIGKILL);
 
             printf("Kurier 3: Zamówienie nr:%d z %d A, %d B, %d C\n",recived[0],recived[1],recived[2],recived[3]);
             
@@ -282,6 +316,8 @@ int main(int argc, char* argv[]) {
     
     close(pdesk);
     close(goldDesk);
+
+    kill(-getpid(),SIGTERM);
     
     return 0;
 }

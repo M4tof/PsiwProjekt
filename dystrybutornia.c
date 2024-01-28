@@ -117,5 +117,6 @@ int main(int argc, char* argv[]){
 
     unlink(klucz);
     unlink(goldFIFO);
+    kill(-getpid(),SIGTERM);
     return 0;
 }
